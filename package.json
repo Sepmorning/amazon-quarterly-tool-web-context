@@ -1,5 +1,5 @@
 {
-  "name": "amazon-quarterly-tool-web",
+  "name": "amazon-quarterly-tool-web-context",
   "version": "1.2.0",
   "private": true,
   "type": "module",

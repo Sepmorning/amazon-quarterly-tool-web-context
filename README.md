@@ -1,8 +1,10 @@
-# Amazon 季度交易数据核验台（Web）
+# Amazon 季度交易数据核验台（上下文证据版）
 
 一个完全运行在浏览器本地的 Amazon 季度跨境电商交易数据工具：拖入 PDF 文件夹，完成自动提取、逐字段证据核对和最终汇总确认。公司工作簿为可选项；上传时生成带公式和完整报告截图的新工作簿，不上传时直接下载解析汇总表。
 
-在线使用：<https://sepmorning.github.io/amazon-quarterly-tool-web/>
+在线使用：<https://sepmorning.github.io/amazon-quarterly-tool-web-context/>
+
+此仓库是上下文证据升级版，保留字段所在区域、表头和小计后再动态标记待核验数据。原版单字段附近截图项目继续独立保留在 `amazon-quarterly-tool-web`。
 
 ## 特点
 
