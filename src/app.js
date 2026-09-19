@@ -255,6 +255,7 @@ function render() {
   if (currentReview) state.reviewScrollTop = currentReview.scrollTop;
   const nextCountryKey = state.session && state.cursor ? state.cursor[0] : null;
   const countryChanged = nextCountryKey !== state.renderedCountryKey;
+  document.body.classList.toggle("review-mode", !!state.session && !state.output);
   app.innerHTML = state.output ? successView() : state.session ? reviewView() : inputView();
   bindEvents();
   if (state.session && !state.output) {
@@ -415,22 +416,11 @@ async function updateEvidence() {
     if (token !== evidenceToken) return;
     canvas.hidden = !shown;
     placeholder.hidden = shown;
-    if (shown) focusEvidenceMark(canvas);
   } catch (error) {
     canvas.hidden = true;
     placeholder.hidden = false;
     toast(`证据截图渲染失败：${error.message}`, "error");
   }
-}
-
-function focusEvidenceMark(canvas) {
-  requestAnimationFrame(() => {
-    const stage = document.querySelector("#canvasStage");
-    if (!stage || stage.scrollHeight <= stage.clientHeight + 1) return;
-    const focusRatio = Number(canvas.dataset.focusRatio || 0.5);
-    const target = canvas.offsetTop + canvas.clientHeight * focusRatio - stage.clientHeight / 2;
-    stage.scrollTop = Math.max(0, Math.min(target, stage.scrollHeight - stage.clientHeight));
-  });
 }
 
 function selectCursor(target) {

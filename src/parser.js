@@ -504,10 +504,6 @@ export async function renderEvidence(result, fieldName, canvas, scale = 3) {
   const context = canvas.getContext("2d", { alpha: false });
   context.drawImage(rendered.canvas, x, y, right - x, bottom - y, 0, 0, canvas.width, canvas.height);
   const marks = (field.evidenceMarks || []).filter((mark) => mark?.bbox?.pageIndex === region.pageIndex);
-  const focusY = marks.length
-    ? marks.reduce((sum, mark) => sum + ((mark.bbox.top + mark.bbox.bottom) / 2 - region.top), 0) / marks.length
-    : (region.bottom - region.top) / 2;
-  canvas.dataset.focusRatio = String(Math.max(0, Math.min(1, focusY / (region.bottom - region.top))));
   if (marks.length) {
     context.fillStyle = "rgba(15, 23, 42, 0.055)";
     context.fillRect(0, 0, canvas.width, canvas.height);
