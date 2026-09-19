@@ -31,6 +31,7 @@ const state = {
   previewOpen: false,
   output: null,
   countryScrollTop: 0,
+  reviewScrollTop: 0,
   renderedCountryKey: null,
 };
 
@@ -95,12 +96,13 @@ function toast(message, type = "info") {
 }
 
 function shell(content, step = 1) {
+  const reviewMode = step === 2;
   return `
     <header class="topbar">
       <a class="brand" href="./" aria-label="返回首页"><span class="brand-mark">${icon("sheet")}</span><span><b>Amazon 季度数据工具</b><small>提取、审核与工作簿生成</small></span></a>
       <div class="privacy-pill">${icon("lock")}<span>本地处理 · 不上传文件</span></div>
     </header>
-    <main class="page-shell">
+    <main class="page-shell ${reviewMode ? "review-page" : ""}">
       <section class="hero">
         <div><span class="eyebrow">AMAZON QUARTERLY REVIEW</span><h1>季度交易数据核验与导出</h1><p>上传 Amazon 季度 PDF 后逐项核对。公司工作簿可选：上传时按国家写入，不上传时直接导出清晰的解析汇总表。</p></div>
         <div class="flow-steps" aria-label="处理步骤">
@@ -245,14 +247,19 @@ function successView() {
 }
 
 function render() {
+  const pageScrollLeft = window.scrollX;
+  const pageScrollTop = window.scrollY;
   const currentList = document.querySelector(".country-list");
   if (currentList) state.countryScrollTop = currentList.scrollTop;
+  const currentReview = document.querySelector(".review-main");
+  if (currentReview) state.reviewScrollTop = currentReview.scrollTop;
   const nextCountryKey = state.session && state.cursor ? state.cursor[0] : null;
   const countryChanged = nextCountryKey !== state.renderedCountryKey;
   app.innerHTML = state.output ? successView() : state.session ? reviewView() : inputView();
   bindEvents();
   if (state.session && !state.output) {
     restoreCountryListScroll(countryChanged);
+    restoreReviewScroll(pageScrollLeft, pageScrollTop);
     updateEvidence();
   }
   state.renderedCountryKey = nextCountryKey;
@@ -261,6 +268,14 @@ function render() {
     bindPreviewEvents();
   }
   renderBusy();
+}
+
+function restoreReviewScroll(pageScrollLeft, pageScrollTop) {
+  requestAnimationFrame(() => {
+    const review = document.querySelector(".review-main");
+    if (review) review.scrollTop = Math.min(state.reviewScrollTop, Math.max(0, review.scrollHeight - review.clientHeight));
+    window.scrollTo({ left: pageScrollLeft, top: pageScrollTop, behavior: "auto" });
+  });
 }
 
 function restoreCountryListScroll(countryChanged) {
@@ -342,7 +357,7 @@ function bindEvents() {
   document.querySelector("#undoButton")?.addEventListener("click", doUndo);
   document.querySelector("#previewButton")?.addEventListener("click", openPreview);
   document.querySelector("#downloadAgain")?.addEventListener("click", downloadOutput);
-  document.querySelector("#newBatch")?.addEventListener("click", () => { Object.assign(state, { pdfFiles: [], workbookFile: null, session: null, cursor: null, workbookPlan: null, output: null, previewOpen: false, countryScrollTop: 0, renderedCountryKey: null }); render(); });
+  document.querySelector("#newBatch")?.addEventListener("click", () => { Object.assign(state, { pdfFiles: [], workbookFile: null, session: null, cursor: null, workbookPlan: null, output: null, previewOpen: false, countryScrollTop: 0, reviewScrollTop: 0, renderedCountryKey: null }); render(); });
   document.querySelector("#auditDownload")?.addEventListener("click", downloadAudit);
 }
 
@@ -377,6 +392,7 @@ async function startExtraction() {
     state.session = createReviewSession(results, failures);
     state.cursor = firstUnresolved(state.session);
     state.countryScrollTop = 0;
+    state.reviewScrollTop = 0;
     state.renderedCountryKey = null;
     toast(`解析完成：成功 ${results.length}，失败 ${failures.length}`, failures.length ? "warning" : "success");
   } catch (error) {
@@ -399,11 +415,22 @@ async function updateEvidence() {
     if (token !== evidenceToken) return;
     canvas.hidden = !shown;
     placeholder.hidden = shown;
+    if (shown) focusEvidenceMark(canvas);
   } catch (error) {
     canvas.hidden = true;
     placeholder.hidden = false;
     toast(`证据截图渲染失败：${error.message}`, "error");
   }
+}
+
+function focusEvidenceMark(canvas) {
+  requestAnimationFrame(() => {
+    const stage = document.querySelector("#canvasStage");
+    if (!stage || stage.scrollHeight <= stage.clientHeight + 1) return;
+    const focusRatio = Number(canvas.dataset.focusRatio || 0.5);
+    const target = canvas.offsetTop + canvas.clientHeight * focusRatio - stage.clientHeight / 2;
+    stage.scrollTop = Math.max(0, Math.min(target, stage.scrollHeight - stage.clientHeight));
+  });
 }
 
 function selectCursor(target) {
